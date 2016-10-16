@@ -3,7 +3,7 @@ function Pacman(id) {
   this.width = 900;
   this.height = 900;
   this.radius = 5;
-  this.size = 10
+  this.size = 10;
   this.clearance = this.radius * 2;
   this.speed = 5;
 }
@@ -34,4 +34,4 @@ Pacman.prototype.render = function(context, status) {
   context.lineTo(status.x, status.y);
   context.fillStyle = 'yellow';
   context.fill();
-}
+};
