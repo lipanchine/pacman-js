@@ -7,7 +7,7 @@ var io = require('socket.io')(server);
 var Game = require('./lib/game');
 var Pacman = require('./lib/pacman');
 
-var port = process.env.PORT || 8080;
+var port = process.env.PORT || 3000;
 
 app.use(express.static(__dirname + '/public'));
 
