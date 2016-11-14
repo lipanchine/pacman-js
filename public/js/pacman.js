@@ -6,9 +6,10 @@ function Pacman(id) {
   this.size = 10;
   this.clearance = this.radius * 2;
   this.speed = 5;
+  this.color = 'yellow';
 }
 
-Pacman.prototype.render = function(context, status) {
+Pacman.prototype.render = function(context, status, gameS) {
   context.beginPath();
   if (status.direction === 'right') {
     context.arc(status.x, status.y, this.size, 
@@ -32,6 +33,19 @@ Pacman.prototype.render = function(context, status) {
   }
 
   context.lineTo(status.x, status.y);
-  context.fillStyle = 'yellow';
-  context.fill();
+//  console.log("%d", gameS);
+  if(gameS == 1){
+    this.color = 'yellow';
+    context.fillStyle = this.color;
+    context.fill();
+  }else{
+    this.color = 'red';
+    context.fillStyle = this.color;
+    context.fill();
+  }
 };
+
+Pacman.prototype.resetColor = function(context){
+  context.fillStyle = this.color;
+  context.fill();
+}

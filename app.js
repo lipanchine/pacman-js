@@ -38,7 +38,7 @@ Server.prototype.setEventHandlers = function () {
 Server.prototype.onSocketConnection = function (socket, _this) {
   util.log("New player connected" + socket.id);
   socket.on('start', function () {
-    return _this.onNewPlayer(this, _this)
+    return _this.onNewPlayer(socket, _this)
   });
   socket.on("disconnect", function () {
     return _this.onClientDisconnect(this, _this)
@@ -53,31 +53,41 @@ Server.prototype.onClientDisconnect = function (socket, _this) {
   //     socket.emit('opponent:disconnect');
   socket.disconnect();
   delete _this.games[socket.id];
+ // delete _this.waitingRoom[socket];
   //   });
   // }
 };
 
-Server.prototype.onNewPlayer = function (socket) {
-  this.waitingRoom.push(socket);
-  if (this.waitingRoom.length > 1) {
-    return this.startGame(socket);
-  } else {
-    this.games[socket.id] = new Game(socket.id);
-    this.addPlayers(this.games[socket.id]);
-  }
+Server.prototype.onNewPlayer = function (socket, _this) {
+  util.log("socket id : ",socket.id);
+  _this.waitingRoom.push(socket);
+  _this.games[socket.id] = new Game(_this.waitingRoom[0].id);
+  return _this.startGame(_this.waitingRoom[0].id);
 };
 
 Server.prototype.startGame = function (socket) {
-  this.games[socket.id] = this.games[this.waitingRoom[0].id];
-  this.addPlayers(this.games[socket.id]);
+  for(var i = 0; i < _this.waitingRoom.length; i++){
+    if(i == 0){
+ //     this.games[socket.id] = this.games[this.waitingRoom[0].id];
+      this.addPlayers(this.games[_this.waitingRoom[0].id]);
+    }else{
+      util.log("waitingRoom 1.id ", _this.waitingRoom[i].id);
+      this.addGhost(_this.waitingRoom[i]);
+    }
+  }
+  return this.games[this.waitingRoom[0].id].init();
 };
 
+Server.prototype.addGhost = function (socket) {
+  console.log("addGhost id "+ socket.id);
+  this.games[this.waitingRoom[0].id].newGhost(socket);
+}
+
 Server.prototype.addPlayers = function (game) {
-  for (var i = 0; i < this.waitingRoom.length; i++) {
-    game.newPlayer(this.waitingRoom[i]);
-  }
-  this.waitingRoom = [];
-  return game.init();
+  console.log("waitingRoom num : %d", this.waitingRoom.length);
+  game.newPlayer(_this.waitingRoom[0]);
+//  this.waitingRoom = [];
+//    return game.init();
 };
 
 new Server().init();

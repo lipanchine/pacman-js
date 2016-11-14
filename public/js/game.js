@@ -7,6 +7,7 @@ function Game(canvas, context, socket) {
   this.players = {};
   this.ghosts = {};
   this.clientID = null;
+//  this.status = 0; // 0 represent shutdown, 1 is normal, 2 is pause, 3 is special mode
 }
 
 Game.prototype.startGame = function () {
@@ -20,11 +21,8 @@ Game.prototype.startGame = function () {
   this.listenForDisconnect();
 };
 
-Game.prototype.addGhosts = function () {
-  this.ghosts[0] = new Ghost(0);
-  this.ghosts[1] = new Ghost(1);
-  this.ghosts[2] = new Ghost(2);
-  this.ghosts[3] = new Ghost(3);
+Game.prototype.addGhosts = function (id) {
+  this.ghosts[id] = new Ghost(id);
 };
 
 Game.prototype.listenForKey = function () {
@@ -41,17 +39,29 @@ Game.prototype.listenForKey = function () {
 Game.prototype.linkToGameServer = function () {
   var _this = this;
   this.socket.on('gameDetails', function (gameID) {
+    console.log("2eme player");
     _this.applyLinkToGame(gameID)
   });
 };
 
 Game.prototype.applyLinkToGame = function (gameID) {
   var _this = this;
-  this.addGhosts();
+  var _socketid = _this.socket.id;
   this.setClientID(this.socket.io.engine.id);
-  _(gameID.IDs).each(function (id) {
-    _this.newPlayer(id)
+  _(gameID.pIDs).each(function (id) {
+    if(_socketid == id){
+      _this.newPlayer(id);
+    }
   });
+  var numGhost =0;
+  _(gameID.gIDs).each(function (id) {
+//      console.log("id " + id);
+    numGhost ++;
+    _this.addGhosts(id);
+  });  
+  for(var i = numGhost; i< 4 ; i++){
+    _this.addGhosts(i);
+  }
 };
 
 Game.prototype.setClientID = function (uniqueID) {
@@ -60,6 +70,10 @@ Game.prototype.setClientID = function (uniqueID) {
 
 Game.prototype.newPlayer = function (id) {
   return this.players[id] = new Pacman(id);
+};
+
+Game.prototype.newGhost = function (id) {
+  return this.ghosts[id] = new Ghost(id);
 };
 
 Game.prototype.listenForUpdate = function () {
@@ -72,12 +86,32 @@ Game.prototype.listenForUpdate = function () {
 Game.prototype.renderAll = function (statuses) {
   _this = this;
   this.context.clearRect(0, 0, this.width, this.height);
-  drawGrid(statuses.maze);
-  _(statuses.ghosts).each(function (ghost) {
-    _this.ghosts[ghost.id].render(ghost, _this.context);
+  drawGrid(statuses.maze, statuses.specialDot);
+  var num =0;
+  _(this.ghosts).each(function (ghost) {
+    console.log("#########");
+    console.log("ghost.id" + ghost.id);
+    console.log("#########");
   });
+  _(statuses.ghosts).each(function (ghost) {
+    console.log("ghost id "+ ghost.id );
+    if(ghost.id == 0 || ghost.id == 1 || ghost.id == 2 ||ghost.id == 3 ){
+      _this.ghosts[ghost.id].render(ghost, _this.context);
+    }else{
+      delete(_(this.ghosts)[num]);
+      _this.addGhosts(ghost.id);
+      num ++;
+      _this.ghosts[ghost.id].render(ghost, _this.context);
+    }
+  });
+
   _(statuses.players).each(function (player) {
-    _this.players[player.id].render(_this.context, player)
+    console.log("player id :" + player.id);
+
+    if(_this.players[player.id]  == null){
+      _this.players[player.id] = new Pacman(player.id);
+    }
+    _this.players[player.id].render(_this.context, player, statuses.GameS);
   });
 };
 
